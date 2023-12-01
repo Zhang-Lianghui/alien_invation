@@ -7,11 +7,16 @@ class Settings:
         self.bg_color = (230, 230, 230)
 
         # 飞船属性
-        self.ship_speed = 0.4
+        self.ship_speed = 1
 
         # 子弹属性
         self.bullet_speed = 0.5
         self.bullet_width = 5
         self.bullet_height = 20
         self.bullet_color = (198, 145, 69)
-        self.bullets_allowed = 5
+        self.bullets_allowed = 20
+
+        # 外星人属性
+        self.alien_speed = 0.1
+        self.aliens_creat_gap = 3
+        self.aliens_per_row = 4

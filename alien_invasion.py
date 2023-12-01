@@ -3,6 +3,9 @@ import pygame
 from settings import Settings
 from ship import Ship
 from bullet import Bullet
+from alien import Alien
+import time
+from random import sample
 
 class AlienInvasion:
     """管理游戏资源和行为的类"""
@@ -16,6 +19,9 @@ class AlienInvasion:
         pygame.display.set_caption("外星人入侵")
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
+        self.aliens = pygame.sprite.Group()
+        self._creat_alien_line()
+        self.last_alien_time = time.time()
 
     def run_game(self):
         """开始游戏的主循环"""
@@ -23,6 +29,8 @@ class AlienInvasion:
             self._check_events()
             self.ship.update()
             self._update_bullets()
+            self._creat_alien_fleet()
+            self.aliens.update()
             self._update_screen()
 
     def _check_events(self):
@@ -69,6 +77,7 @@ class AlienInvasion:
         self.ship.blitme()
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
+        self.aliens.draw(self.screen)
         # 让最近绘制的屏幕可见
         pygame.display.flip()
     
@@ -85,6 +94,31 @@ class AlienInvasion:
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
+    
+    def _creat_alien_fleet(self):
+        """创建外星人舰队，连续不断的外星人"""
+        cur_time = time.time()
+        if cur_time - self.last_alien_time >= self.settings.aliens_creat_gap:
+            self._creat_alien_line()
+            self.last_alien_time = cur_time
+    def _creat_alien_line(self):
+        """创建一行随机生成的外星人"""
+
+        # 随机生成一行外星人的x坐标
+        alien_width = Alien(self).rect.width
+        random_x = sorted(sample(range(0,self.settings.screen_width - alien_width),self.settings.aliens_per_row))
+        # 确保任意两个外星人之间的距离大于外星人的宽度
+        while any(abs(random_x[i] - random_x[i + 1]) < alien_width for i in range(self.settings.aliens_per_row - 1)):
+            random_x = sorted(sample(range(0,self.settings.screen_width - alien_width),self.settings.aliens_per_row))
+        for x in random_x:
+            self._creat_alien(x)
+
+    def _creat_alien(self, x, y=0):
+        """在(x, y)点创建一个外星人"""
+        alien = Alien(self)
+        alien.rect.x = x
+        alien.rect.y = y
+        self.aliens.add(alien)
 
 if __name__ == '__main__':
     # 创建游戏实例并运行游戏
