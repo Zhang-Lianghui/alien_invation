@@ -8,6 +8,7 @@ from ship import Ship
 from bullet import Bullet
 from alien import Alien
 from game_status import GameStatus
+from button import Button
 
 class AlienInvasion:
     """管理游戏资源和行为的类"""
@@ -24,6 +25,7 @@ class AlienInvasion:
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
         self._creat_alien_line()
+        self.play_button = Button(self, "Play")
         self.last_alien_time = time.time()
 
     def run_game(self):
@@ -48,6 +50,9 @@ class AlienInvasion:
                 self._check_keydown_events(event)
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                self._check_play_button(mouse_pos)
 
     def _check_keydown_events(self,event):
         """处理键盘按下事件"""
@@ -63,6 +68,8 @@ class AlienInvasion:
             self._fire_bullet()
         elif event.key == pygame.K_q:
             sys.exit()
+        elif event.key == pygame.K_p:
+            self._start_game()
     
     def _check_keyup_events(self,event):
         """处理键盘松开事件"""
@@ -75,6 +82,26 @@ class AlienInvasion:
         elif event.key == pygame.K_DOWN:
             self.ship.moving_down = False
 
+    def _check_play_button(self, mouse_pos):
+        """玩家单击play时开始游戏"""
+        button_clicked = self.play_button.rect.collidepoint(mouse_pos)
+        if button_clicked and not self.status.game_active:
+            self._start_game()
+    
+    def _start_game(self):
+        """开始游戏"""
+        self.status.reset_status()
+        self.status.game_active = True
+
+        self.aliens.empty()
+        self.bullets.empty()
+
+        self._creat_alien_line()
+        self.ship.center_ship()
+
+        pygame.mouse.set_visible(False)
+
+
     def _update_screen(self):
         """更新屏幕元素并显示"""
         self.screen.fill(self.settings.bg_color)
@@ -82,6 +109,10 @@ class AlienInvasion:
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
         self.aliens.draw(self.screen)
+
+        #如果游戏处于非活动状态，绘制Play按钮
+        if not self.status.game_active:
+            self.play_button.draw_button()
         # 让最近绘制的屏幕可见
         pygame.display.flip()
 
@@ -115,10 +146,10 @@ class AlienInvasion:
         cur_time = time.time()
         if cur_time - self.last_alien_time >= self.settings.aliens_creat_gap:
             self._creat_alien_line()
-            self.last_alien_time = cur_time
+            #self.last_alien_time = cur_time
     def _creat_alien_line(self):
         """创建一行随机生成的外星人"""
-
+        self.last_alien_time = time.time()
         # 随机生成一行外星人的x坐标
         alien_width = Alien(self).rect.width
         random_x = sorted(sample(range(0,self.settings.screen_width - alien_width),self.settings.aliens_per_row))
@@ -145,6 +176,7 @@ class AlienInvasion:
             self.status.ships_left -= 1
         else:
             self.status.game_active = False
+            pygame.mouse.set_visible(True)
 
         self.aliens.empty()
         self.bullets.empty()

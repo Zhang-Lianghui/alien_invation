@@ -3,7 +3,7 @@ class GameStatus:
 
     def __init__(self, ai_game) -> None:
         self.settings = ai_game.settings
-        self.game_active = True
+        self.game_active = False
         self.reset_status()
     
     def reset_status(self):
