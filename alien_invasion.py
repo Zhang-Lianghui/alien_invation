@@ -9,6 +9,7 @@ from bullet import Bullet
 from alien import Alien
 from game_status import GameStatus
 from button import Button
+from scoreboard import Scoreboard
 
 class AlienInvasion:
     """管理游戏资源和行为的类"""
@@ -22,6 +23,7 @@ class AlienInvasion:
         pygame.display.set_caption("外星人入侵")
         self.status = GameStatus(self)
         self.ship = Ship(self)
+        self.sb = Scoreboard(self)
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
         self._creat_alien_line()
@@ -67,6 +69,7 @@ class AlienInvasion:
         elif event.key == pygame.K_SPACE:
             self._fire_bullet()
         elif event.key == pygame.K_q:
+            self.status.save_high_score()
             sys.exit()
         elif event.key == pygame.K_p:
             self._start_game()
@@ -92,6 +95,9 @@ class AlienInvasion:
         """开始游戏"""
         self.status.reset_status()
         self.status.game_active = True
+        self.settings.initialize_dynamic_settings()
+        self.sb.prep_score()
+        self.sb.prep_level()
 
         self.aliens.empty()
         self.bullets.empty()
@@ -109,6 +115,7 @@ class AlienInvasion:
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
         self.aliens.draw(self.screen)
+        self.sb.show_score()
 
         #如果游戏处于非活动状态，绘制Play按钮
         if not self.status.game_active:
@@ -146,6 +153,11 @@ class AlienInvasion:
         cur_time = time.time()
         if cur_time - self.last_alien_time >= self.settings.aliens_creat_gap:
             self._creat_alien_line()
+            self.settings.aliens_batch += 1
+            if self.settings.aliens_batch % 5 == 0:
+                self.settings.increase_speed()
+                self.status.level += 1
+                self.sb.prep_level()
             #self.last_alien_time = cur_time
     def _creat_alien_line(self):
         """创建一行随机生成的外星人"""
@@ -169,6 +181,12 @@ class AlienInvasion:
     def _check_bullet_alien_collisions(self):
         """"相应子弹和外星人的碰撞"""
         collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
+
+        if collisions:
+            for aliens in collisions.values():
+                self.status.score += self.settings.alien_points * len(aliens)
+            self.sb.prep_score()
+            self.sb.check_high_score()
     
     def _ship_hit(self):
         """响应飞船被外星人撞到"""

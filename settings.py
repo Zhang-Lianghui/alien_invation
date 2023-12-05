@@ -19,5 +19,22 @@ class Settings:
 
         # 外星人属性
         self.alien_speed = 0.1
+        self.speed_up_scale = 1.05
         self.aliens_creat_gap = 3
         self.aliens_per_row = 4
+        self.aliens_batch = 1
+        self.alien_points = 50
+
+    def initialize_dynamic_settings(self):
+        """初始化随游戏变化的设置"""
+        self.ship_speed = 1.0
+        self.bullet_speed = 0.5
+        self.alien_speed = 0.1
+        self.alien_points = 10
+
+    def increase_speed(self):
+        """提高速度"""
+        self.alien_speed *= self.speed_up_scale
+        self.ship_speed *= self.speed_up_scale
+        self.bullet_speed *= self.speed_up_scale
+        self.alien_points += 10
